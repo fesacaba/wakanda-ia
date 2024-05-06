@@ -1,21 +1,29 @@
 package br.com.wakanda.open.ia.controller;
 
+import br.com.wakanda.open.ia.model.ResponseEstado;
+import br.com.wakanda.open.ia.service.InfoEstadosUsecase;
 import org.springframework.ai.chat.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.openai.OpenAiChatClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+
 
 @RestController
 @RequestMapping("/ia")
 public class SampleController {
 
-    @Autowired
-    private OpenAiChatClient client;
+    private final OpenAiChatClient client;
+    private final InfoEstadosUsecase infoEstadosUsecase;
+
+    public SampleController(OpenAiChatClient client, InfoEstadosUsecase infoEstadosUsecase) {
+        this.client = client;
+        this.infoEstadosUsecase = infoEstadosUsecase;
+    }
+
 
     @GetMapping("/simples")
     public String primeiroTeste(
@@ -34,27 +42,17 @@ public class SampleController {
     }
 
     @GetMapping("/estado")
-    public String buscaEstadosBrasil(
-            @RequestParam(value = "msg", defaultValue = "quais estados do Brasil")
+    public Flux<String> buscaEstadosBrasil(
+            @RequestParam(value = "msg", defaultValue = "Fale sobre o estado que é conhecido pelos seus canaviais")
             //if msg null | defaultValue
             String msg
     ) {
-
-        PromptTemplate prompt = new PromptTemplate(
-                """
-                        Voce so pode responder perguntas sobre estados do Brasil,
-                        Caso receber alguma pergunta não relacionada a estados, responder:
-                        [Opa, Opa, Opa, aqui é so sobre estados.]
-                        
-                        Por favor retorne o {msg} enumerado, com as capitais.
-                        """
-
-        );
-
-
-        prompt.add("msg", msg);
-
-        return client.call(prompt.create()).getResult().getOutput().getContent();
+        return infoEstadosUsecase.buscaEstadosBrasil(msg);
     }
 
+
+
 }
+
+
+
